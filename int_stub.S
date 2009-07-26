@@ -54,9 +54,12 @@ intr_common_handler:
     push %eax
 
     // Handler aufrufen
+    // Der Rueckgabewert ist der Prozessorzustand des moeglicherweise
+    // gewechselten Tasks. Wir muessen also den Stack dorthin wechseln
+    // um die Register wiederherzustellen.
     push %esp
     call handle_interrupt
-    add $4, %esp
+    mov %eax, %esp
 
     // CPU-Zustand wiederherstellen
     pop %eax

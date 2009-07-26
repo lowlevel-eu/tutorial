@@ -179,8 +179,10 @@ void init_intr(void)
     asm volatile("sti");
 }
 
-void handle_interrupt(struct cpu_state* cpu)
+struct cpu_state* handle_interrupt(struct cpu_state* cpu)
 {
+    struct cpu_state* new_cpu = cpu;
+
     if (cpu->intr <= 0x1f) {
         kprintf("Exception %d, Kernel angehalten!\n", cpu->intr);
 
@@ -191,6 +193,11 @@ void handle_interrupt(struct cpu_state* cpu)
             asm volatile("cli; hlt");
         }
     } else if (cpu->intr >= 0x20 && cpu->intr <= 0x2f) {
+
+        if (cpu->intr == 0x20) {
+            new_cpu = schedule(cpu);
+        }
+
         if (cpu->intr >= 0x28) {
             // EOI an Slave-PIC
             outb(0xa0, 0x20);
@@ -204,4 +211,6 @@ void handle_interrupt(struct cpu_state* cpu)
             asm volatile("cli; hlt");
         }
     }
+
+    return new_cpu;
 }

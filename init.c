@@ -8,4 +8,5 @@ void init(void)
 
     init_gdt();
     init_intr();
+    init_multitasking();
 }

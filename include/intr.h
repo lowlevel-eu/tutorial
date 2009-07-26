@@ -26,7 +26,9 @@ struct cpu_state {
 
 void init_gdt(void);
 void init_intr(void);
+void init_multitasking(void);
 
-void handle_interrupt(struct cpu_state* cpu);
+struct cpu_state* handle_interrupt(struct cpu_state* cpu);
+struct cpu_state* schedule(struct cpu_state* cpu);
 
 #endif
