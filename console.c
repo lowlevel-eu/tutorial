@@ -8,12 +8,21 @@ static char* video = (char*) 0xb8000;
 
 static int kprintf_res = 0;
 
+static inline void outb(unsigned short port, unsigned char data)
+{
+    asm volatile ("outb %0, %1" : : "a" (data), "Nd" (port));
+}
+
 static void kputc(char c)
 {
     if ((c == '\n') || (x > 79)) {
         x = 0;
         y++;
     }
+
+    // Die folgende Zeile reinnehmen fuer Ausgabe auf der seriellen
+    // Schnittstelle (nur Emulatoren; reale Hardware braucht mehr)
+    // outb(0x3f8, c);
 
     if (c == '\n') {
         return;
