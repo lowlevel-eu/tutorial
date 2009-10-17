@@ -1,5 +1,6 @@
 #include "console.h"
 #include "intr.h"
+#include "mm.h"
 
 static void task_a(void)
 {
@@ -14,20 +15,29 @@ static void task_b(void)
         kprintf("B");
     }
 }
-
-static uint8_t stack_a[4096];
-static uint8_t stack_b[4096];
-
-static char user_stack_a[4096];
-static char user_stack_b[4096];
+static void task_c(void)
+{
+    while (1) {
+        kprintf("c");
+    }
+}
+static void task_d(void)
+{
+    while (1) {
+        kprintf("D");
+    }
+}
 
 /*
  * Jeder Task braucht seinen eigenen Stack, auf dem er beliebig arbeiten kann,
  * ohne dass ihm andere Tasks Dinge ueberschreiben. Ausserdem braucht ein Task
  * einen Einsprungspunkt.
  */
-struct cpu_state* init_task(uint8_t* stack, uint8_t* user_stack, void* entry)
+struct cpu_state* init_task(void* entry)
 {
+    uint8_t* stack = pmm_alloc();
+    uint8_t* user_stack = pmm_alloc();
+
     /*
      * CPU-Zustand fuer den neuen Task festlegen
      */
@@ -63,13 +73,15 @@ struct cpu_state* init_task(uint8_t* stack, uint8_t* user_stack, void* entry)
 }
 
 static int current_task = -1;
-static int num_tasks = 2;
-static struct cpu_state* task_states[2];
+static int num_tasks = 4;
+static struct cpu_state* task_states[4];
 
 void init_multitasking(void)
 {
-    task_states[0] = init_task(stack_a, user_stack_a, task_a);
-    task_states[1] = init_task(stack_b, user_stack_b, task_b);
+    task_states[0] = init_task(task_a);
+    task_states[1] = init_task(task_b);
+    task_states[2] = init_task(task_c);
+    task_states[3] = init_task(task_d);
 }
 
 /*
