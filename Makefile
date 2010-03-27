@@ -1,23 +1,9 @@
-SRCS = $(shell find -name '*.[cS]')
-OBJS = $(addsuffix .o,$(basename $(SRCS)))
+all: kernel user
 
-CC = gcc
-LD = ld
+kernel:
+	$(MAKE) -C kernel
 
-ASFLAGS = -m32
-CFLAGS = -m32 -Wall -g -fno-stack-protector -I include
-LDFLAGS = -melf_i386 -Tkernel.ld
+user:
+	$(MAKE) -C user
 
-kernel: $(OBJS)
-	$(LD) $(LDFLAGS) -o $@ $^
-
-%.o: %.c
-	$(CC) $(CFLAGS) -c -o $@ $^
-
-%.o: %.S
-	$(CC) $(ASFLAGS) -c -o $@ $^
-
-clean:
-	rm $(OBJS)
-
-.PHONY: clean
+.PHONY: all kernel user
