@@ -53,6 +53,11 @@ intr_common_handler:
     push %ebx
     push %eax
 
+    // Kernel-Datensegmente laden
+    mov $0x10, %ax
+    mov %ax, %ds
+    mov %ax, %es
+
     // Handler aufrufen
     // Der Rueckgabewert ist der Prozessorzustand des moeglicherweise
     // gewechselten Tasks. Wir muessen also den Stack dorthin wechseln
@@ -60,6 +65,11 @@ intr_common_handler:
     push %esp
     call handle_interrupt
     mov %eax, %esp
+
+    // User-Datensegmente laden
+    mov $0x23, %ax
+    mov %ax, %ds
+    mov %ax, %es
 
     // CPU-Zustand wiederherstellen
     pop %eax
