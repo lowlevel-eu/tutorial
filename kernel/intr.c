@@ -185,6 +185,21 @@ void init_intr(void)
     asm volatile("sti");
 }
 
+struct cpu_state* syscall(struct cpu_state* cpu)
+{
+    /*
+     * Der Aufrufer uebergibt in eax die Nummer des Syscalls. In den weiteren
+     * Registern werden die Parameter uebergeben.
+     */
+    switch (cpu->eax) {
+        case 0: /* putc */
+            kprintf("%c", cpu->ebx);
+            break;
+    }
+
+    return cpu;
+}
+
 struct cpu_state* handle_interrupt(struct cpu_state* cpu)
 {
     struct cpu_state* new_cpu = cpu;
@@ -211,6 +226,8 @@ struct cpu_state* handle_interrupt(struct cpu_state* cpu)
         }
         // EOI an Master-PIC
         outb(0x20, 0x20);
+    } else if (cpu->intr == 0x30) {
+        new_cpu = syscall(cpu);
     } else {
         kprintf("Unbekannter Interrupt\n");
         while(1) {
