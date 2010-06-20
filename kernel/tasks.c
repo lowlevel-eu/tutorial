@@ -5,6 +5,7 @@
 #include "intr.h"
 #include "mm.h"
 #include "multiboot.h"
+#include "elf.h"
 
 struct task {
     struct cpu_state*   cpu_state;
@@ -91,6 +92,47 @@ struct task* init_task(void* entry)
     return task;
 }
 
+void init_elf(void* image)
+{
+    /*
+     * FIXME Wir muessen eigentlich die Laenge vom Image pruefen, damit wir bei
+     * korrupten ELF-Dateien nicht ueber das Dateiende hinauslesen.
+     */
+
+    struct elf_header* header = image;
+    struct elf_program_header* ph;
+    int i;
+
+    /* Ist es ueberhaupt eine ELF-Datei? */
+    if (header->magic != ELF_MAGIC) {
+        kprintf("Keine gueltige ELF-Magic!\n");
+        return;
+    }
+
+    /*
+     * Alle Program Header durchgehen und den Speicher an die passende Stelle
+     * kopieren.
+     *
+     * FIXME Wir erlauben der ELF-Datei hier, jeden beliebigen Speicher zu
+     * ueberschreiben, einschliesslich dem Kernel selbst.
+     */
+    ph = (struct elf_program_header*) (((char*) image) + header->ph_offset);
+    for (i = 0; i < header->ph_entry_count; i++, ph++) {
+        void* dest = (void*) ph->virt_addr;
+        void* src = ((char*) image) + ph->offset;
+
+        /* Nur Program Header vom Typ LOAD laden */
+        if (ph->type != 1) {
+            continue;
+        }
+
+        memset(dest, 0, ph->mem_size);
+        memcpy(dest, src, ph->file_size);
+    }
+
+    init_task((void*) header->entry);
+}
+
 void init_multitasking(struct multiboot_info* mb_info)
 {
     if (mb_info->mbs_mods_count == 0) {
@@ -108,11 +150,7 @@ void init_multitasking(struct multiboot_info* mb_info)
          * erste davon nach 2 MB und erstellen dann einen neuen Task dafuer.
          */
         struct multiboot_module* modules = mb_info->mbs_mods_addr;
-        size_t length = modules[0].mod_end - modules[0].mod_start;
-        void* load_addr = (void*) 0x200000;
-
-        memcpy(load_addr, (void*) modules[0].mod_start, length);
-        init_task(load_addr);
+        init_elf((void*) modules[0].mod_start);
     }
 }
 
