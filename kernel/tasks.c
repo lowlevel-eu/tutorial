@@ -1,6 +1,10 @@
+#include <stddef.h>
+#include <string.h>
+
 #include "console.h"
 #include "intr.h"
 #include "mm.h"
+#include "multiboot.h"
 
 struct task {
     struct cpu_state*   cpu_state;
@@ -87,12 +91,29 @@ struct task* init_task(void* entry)
     return task;
 }
 
-void init_multitasking(void)
+void init_multitasking(struct multiboot_info* mb_info)
 {
-    init_task(task_a);
-    init_task(task_b);
-    init_task(task_c);
-    init_task(task_d);
+    if (mb_info->mbs_mods_count == 0) {
+        /*
+         * Ohne Module machen wir dasselbe wie bisher auch. Eine genauso gute
+         * Alternative waere es, einfach mit einer Fehlermeldung abzubrechen.
+         */
+        init_task(task_a);
+        init_task(task_b);
+        init_task(task_c);
+        init_task(task_d);
+    } else {
+        /*
+         * Wenn wir mindestens ein Multiboot-Modul haben, kopieren wir das
+         * erste davon nach 2 MB und erstellen dann einen neuen Task dafuer.
+         */
+        struct multiboot_module* modules = mb_info->mbs_mods_addr;
+        size_t length = modules[0].mod_end - modules[0].mod_start;
+        void* load_addr = (void*) 0x200000;
+
+        memcpy(load_addr, (void*) modules[0].mod_start, length);
+        init_task(load_addr);
+    }
 }
 
 /*

@@ -51,6 +51,25 @@ void pmm_init(struct multiboot_info* mb_info)
         pmm_mark_used((void*) addr);
         addr += 0x1000;
     }
+
+    /*
+     * Die Multibootstruktur auch, genauso wie die Liste von Multibootmodulen.
+     * Wir gehen bei beiden davon aus, dass sie maximal 4k gross werden
+     */
+    struct multiboot_module* modules = mb_info->mbs_mods_addr;
+
+    pmm_mark_used(mb_info);
+    pmm_mark_used(modules);
+
+    /* Und die Multibootmodule selber sind auch belegt */
+    int i;
+    for (i = 0; i < mb_info->mbs_mods_count; i++) {
+        addr = modules[i].mod_start;
+        while (addr < modules[i].mod_end) {
+            pmm_mark_used((void*) addr);
+            addr += 0x1000;
+        }
+    }
 }
 
 void* pmm_alloc(void)

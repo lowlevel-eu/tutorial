@@ -2,6 +2,7 @@
 #define INTR_H
 
 #include <stdint.h>
+#include "multiboot.h"
 
 struct cpu_state {
     // Von Hand gesicherte Register
@@ -26,7 +27,7 @@ struct cpu_state {
 
 void init_gdt(void);
 void init_intr(void);
-void init_multitasking(void);
+void init_multitasking(struct multiboot_info* mb_info);
 
 struct cpu_state* handle_interrupt(struct cpu_state* cpu);
 struct cpu_state* schedule(struct cpu_state* cpu);
