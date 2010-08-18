@@ -9,6 +9,7 @@ void init(struct multiboot_info *mb_info)
     kprintf("Hello World!\n");
 
     pmm_init(mb_info);
+    vmm_init();
 
     init_gdt();
     init_intr();

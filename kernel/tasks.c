@@ -150,7 +150,11 @@ void init_multitasking(struct multiboot_info* mb_info)
          * erste davon nach 2 MB und erstellen dann einen neuen Task dafuer.
          */
         struct multiboot_module* modules = mb_info->mbs_mods_addr;
-        init_elf((void*) modules[0].mod_start);
+        int i;
+
+        for (i = 0; i < mb_info->mbs_mods_count; i++) {
+            init_elf((void*) modules[i].mod_start);
+        }
     }
 }
 
